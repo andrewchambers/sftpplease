@@ -11,7 +11,8 @@ file access such as running complex applications.
 
 # Project Status
 
-Alpha, read only mode should be safe, but there are probably bugs.
+Alpha, read only mode should be safe, but there are definitely bugs, the code hasn't been battle tested at all, and there
+isn't much free time to work on it.
 
 Currently only dropbox is supported.
 
