@@ -62,7 +62,7 @@ $ scp ./file.txt dropbox@your.server.com:/
 - Go to create app (https://www.dropbox.com/developers/apps/create)
 - Follow the guides.
 - Visit your app page.
-- Click the 'Generate' bitton to generate an api access token, Use this token under -the 'vfs dropbox:YOUR_API_TOKEN' argument.
+- Click the 'Generate' button to generate an api access token, Use this token under -the 'vfs dropbox:YOUR_API_TOKEN' argument.
 
 # Donating
 
