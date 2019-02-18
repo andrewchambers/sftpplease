@@ -1,7 +1,7 @@
 # sftpplease
 
 This program acts as a secure bridge between an ssh server and supported cloud providers.
-This lets you use sftp and scp client to access cloud prividers like dropbox without
+This lets you use sftp and scp client to access cloud providers like dropbox without
 installing any closed source software on your devices :).
 
 Any sftp or scp client should work, I have tested with filezilla and openssh sftp/scp.
