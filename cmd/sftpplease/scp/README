@@ -1,0 +1,5 @@
+Scp protocol remote handler
+
+Any similarities between this and OpenSSH's scp are not coincidental
+
+Initially written and released into public domain by Vasily Kolobkov
