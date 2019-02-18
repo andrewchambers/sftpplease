@@ -58,12 +58,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	if *ReadOnly {
+		fs = &vfs.ReadOnlyVFS{Fs: fs}
+	}
+
 	if path.Base(cmdArgs[0]) == "sftp-server" {
 		opts := &sftp.Options{
-			Debug:       *Debug,
-			MaxFiles:    *MaxFiles,
-			LogFunc:     log.Printf,
-			WriteAccess: !*ReadOnly,
+			Debug:    *Debug,
+			MaxFiles: *MaxFiles,
+			LogFunc:  log.Printf,
 		}
 
 		sftp.Serve(opts, fs, &extraio.MergedReadWriteCloser{

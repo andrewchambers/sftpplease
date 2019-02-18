@@ -17,16 +17,14 @@ import (
 var (
 	ErrInvalidHandle    = errors.New("invalid handle")
 	ErrUnsupported      = errors.New("unsupported operation")
-	ErrPermissionDenied = errors.New("permission denied")
 	ErrBadRead          = errors.New("bad read")
 	ErrTooManyOpenFiles = errors.New("too many open files")
 )
 
 type Options struct {
-	Debug       bool
-	MaxFiles    int
-	LogFunc     func(string, ...interface{})
-	WriteAccess bool
+	Debug    bool
+	MaxFiles int
+	LogFunc  func(string, ...interface{})
 }
 
 type Session struct {
@@ -271,7 +269,7 @@ func (s *Session) respondError(respId uint32, err error) {
 	} else if err == os.ErrNotExist {
 		code = protosftp.FX_NO_SUCH_FILE
 		msg = err.Error()
-	} else if err == ErrPermissionDenied {
+	} else if os.IsPermission(err) {
 		code = protosftp.FX_PERMISSION_DENIED
 		msg = err.Error()
 	} else if err == ErrUnsupported {
@@ -313,12 +311,6 @@ func (s *Session) handleRealPath(req *protosftp.FxpRealpathPacket) {
 }
 
 func (s *Session) handleRemove(req *protosftp.FxpRemovePacket) {
-
-	if !s.Options.WriteAccess {
-		s.respondError(req.ID, ErrPermissionDenied)
-		return
-	}
-
 	st, err := s.fs.Stat(req.Filename)
 	if err != nil {
 		s.respondError(req.ID, err)
@@ -340,11 +332,6 @@ func (s *Session) handleRemove(req *protosftp.FxpRemovePacket) {
 }
 
 func (s *Session) handleRmdir(req *protosftp.FxpRmdirPacket) {
-
-	if !s.Options.WriteAccess {
-		s.respondError(req.ID, ErrPermissionDenied)
-		return
-	}
 
 	st, err := s.fs.Stat(req.Path)
 	if err != nil {
@@ -392,11 +379,6 @@ func (s *Session) handleStat(req *protosftp.FxpStatPacket) {
 }
 
 func (s *Session) handleSetStat(req *protosftp.FxpSetStatPacket) {
-
-	if !s.Options.WriteAccess {
-		s.respondError(req.ID, ErrPermissionDenied)
-		return
-	}
 
 	if req.Attrs.Flags&protosftp.FILEXFER_ATTR_PERMISSIONS != 0 {
 		err := s.fs.Chmod(req.Path, os.FileMode(req.Attrs.Mode))
@@ -463,7 +445,6 @@ func (s *Session) handleOpen(req *protosftp.FxpOpenPacket) {
 	}
 
 	flags := 0
-	writeAttempt := true
 
 	if req.Pflags&protosftp.FXF_READ != 0 && req.Pflags&protosftp.FXF_WRITE != 0 {
 		flags = os.O_RDWR
@@ -501,15 +482,6 @@ func (s *Session) handleOpen(req *protosftp.FxpOpenPacket) {
 		return
 	}
 
-	if (flags&3 == os.O_RDONLY) && (flags&(os.O_CREATE|os.O_TRUNC|os.O_APPEND) == 0) {
-		writeAttempt = false
-	}
-
-	if writeAttempt && !s.Options.WriteAccess {
-		s.respondError(req.ID, ErrPermissionDenied)
-		return
-	}
-
 	mode := os.FileMode(0755)
 	if req.Attrs.Flags&protosftp.FILEXFER_ATTR_PERMISSIONS != 0 {
 		mode = os.FileMode(req.Attrs.Mode & 0777)
@@ -529,11 +501,6 @@ func (s *Session) handleOpen(req *protosftp.FxpOpenPacket) {
 }
 
 func (s *Session) handleMkdir(req *protosftp.FxpMkdirPacket) {
-
-	if !s.Options.WriteAccess {
-		s.respondError(req.ID, ErrPermissionDenied)
-		return
-	}
 
 	mode := os.FileMode(0755)
 	if req.Attrs.Flags&protosftp.FILEXFER_ATTR_PERMISSIONS != 0 {
@@ -571,11 +538,6 @@ func (s *Session) handleOpenDir(req *protosftp.FxpOpendirPacket) {
 
 func (s *Session) handleWrite(req *protosftp.FxpWritePacket) {
 
-	if !s.Options.WriteAccess {
-		s.respondError(req.ID, ErrPermissionDenied)
-		return
-	}
-
 	h, ok := s.files[req.Handle]
 	if !ok {
 		s.respondError(req.ID, ErrInvalidHandle)
@@ -595,12 +557,6 @@ func (s *Session) handleRead(req *protosftp.FxpReadPacket) {
 }
 
 func (s *Session) handleRename(req *protosftp.FxpRenamePacket) {
-
-	if !s.Options.WriteAccess {
-		s.respondError(req.ID, ErrPermissionDenied)
-		return
-	}
-
 	err := s.fs.Rename(req.Oldpath, req.Newpath)
 	if err != nil {
 		s.respondError(req.ID, err)
@@ -610,12 +566,10 @@ func (s *Session) handleRename(req *protosftp.FxpRenamePacket) {
 }
 
 func (s *Session) handleReadLink(req *protosftp.FxpReadlinkPacket) {
-
 	s.respondError(req.ID, ErrUnsupported)
 }
 
 func (s *Session) handleSymlink(req *protosftp.FxpSymlinkPacket) {
-
 	s.respondError(req.ID, ErrUnsupported)
 }
 
