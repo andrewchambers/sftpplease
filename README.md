@@ -74,5 +74,5 @@ If you are able to give a donation, it would help progress greatly.
 # Credits and thanks
 
 - Vasily Kolobkov for writing the original scp implementation.
-- Authors of https://github.com/pkg/sftp for providing the sftp package parsing code.
+- Authors of https://github.com/pkg/sftp for providing the sftp packet parsing code.
 - Authors of https://github.com/anmitsu/go-shlex for providing shell parsing.
