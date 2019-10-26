@@ -9,9 +9,9 @@ import (
 	"os"
 	"path"
 	"strings"
-	"syscall"
 
 	"github.com/andrewchambers/sftpplease/vfs"
+	"golang.org/x/sys/unix"
 )
 
 const (
@@ -220,8 +220,8 @@ func sinkDir(parent, line string, times *FileTimes) error {
 	var pendErrs []error
 	if times != nil {
 		// XXX: VFS has no utimes api.
-		//t := []syscall.Timeval{times.Atime, times.Mtime}
-		//if err := syscall.Utimes(name, t); err != nil {
+		//t := []unix.Timeval{times.Atime, times.Mtime}
+		//if err := unix.Utimes(name, t); err != nil {
 		//	pendErrs = append(pendErrs, err)
 		//}
 	}
@@ -284,8 +284,8 @@ func sinkFile(name, line string, times *FileTimes) error {
 		}
 	}
 	if times != nil {
-		if err := syscall.Utimes(name,
-			[]syscall.Timeval{times.Atime, times.Mtime}); err != nil {
+		if err := unix.Utimes(name,
+			[]unix.Timeval{times.Atime, times.Mtime}); err != nil {
 
 			pendErrs = append(pendErrs, err)
 		}
@@ -457,7 +457,7 @@ func sendAttr(st os.FileInfo) error {
 	mtime := st.ModTime().Unix()
 	atime := int64(0)
 
-	if sysStat, ok := st.Sys().(*syscall.Stat_t); ok {
+	if sysStat, ok := st.Sys().(*unix.Stat_t); ok {
 		atime, _ = sysStat.Atim.Unix()
 	}
 
@@ -558,8 +558,8 @@ func usage() {
 }
 
 type FileTimes struct {
-	Atime syscall.Timeval
-	Mtime syscall.Timeval
+	Atime unix.Timeval
+	Mtime unix.Timeval
 }
 
 type FatalError string
